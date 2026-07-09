@@ -44,6 +44,22 @@ npz for vectors, atomic writes, `data/` gitignored and expensive).
   publish to docs/index.html (enwiki) and docs/global.html. Non-English
   redirect/rename views are NOT resolved (enwiki's are) — documented
   undercount. Top-25k overlap between the two rosters: 76.5%.
+- **2026-07-09 — gender-erasure variants (stage 05b)**: gender was the
+  map's strongest organizer (2D 15-NN gender purity 0.904 vs 0.548
+  gender-blind baseline). Centroid (difference-of-means projection) and
+  LEACE erasures both drop a held-out linear probe from AUC 1.00 to ~0.49
+  and map purity to ~0.65 — for a binary concept LEACE is rank-1, so the
+  centroid direction ≈ the whole linearly-decodable subspace. Residual 0.65
+  purity = nonlinear text signal ("actress", pronouns, roles). Toponymy
+  names de-gendered on their own (one "American Actors" continent replaces
+  the actress/actor split). Probe protocol gotcha: fit the eraser on the
+  TRAIN split only — fitting on the full set before splitting yields
+  systematically anti-predictive held-out AUC (noise directions' class gaps
+  must cancel between splits).
+- **2026-07-09 — stage 04 read TOP_PARQUET instead of map_roster_parquet()**
+  after the variant split, so the global map's first render had enwiki
+  people's facets (5,872 newcomers all "Unknown"). Fixed + refetched; when
+  adding a variant knob, grep EVERY stage for the paths it switches.
 - **2026-07-09 — no case-folding in the pageview join**: the global metric
   disagreeing with the enwiki metric exposed that title_key's lowercasing
   let people absorb unrelated same-name-different-case pages (TeQuila ←

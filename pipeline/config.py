@@ -91,7 +91,7 @@ GLOBAL_TOP_PARQUET = DATA_DIR / f"people_top{MAP_N // 1000}k_global.parquet"
 #   "enwiki" -- median monthly English Wikipedia views (stage 02)
 #   "global" -- median monthly views across ALL Wikipedias (stage 02b)
 # Stage 03+ artifacts are suffixed with this, so both maps coexist.
-ROSTER_VARIANT = "enwiki"
+ROSTER_VARIANT = "global"
 
 
 def map_roster_parquet() -> Path:
@@ -116,7 +116,10 @@ WIKIDATA_JSONL = DATA_DIR / ".wikidata_claims.jsonl"
 WB_BATCH = 50  # wbgetentities non-bot max
 
 # --- Stage 05: embeddings ---
-EMBED_VARIANT = "lead"  # future experiment: "full" (whole articles)
+# "lead" is the base Cohere embedding; "lead_nogender_centroid" and
+# "lead_nogender_leace" are stage-05b linear transforms of it (no API cost).
+# Future experiment: "full" (whole articles).
+EMBED_VARIANT = "lead_nogender_leace"
 EMBED_MODEL = "embed-v4.0"
 EMBED_DIM = 1024
 EMBED_BATCH = 96
@@ -145,9 +148,13 @@ TOPONYMY_TEXT_CHARS = 2000  # title + lead, truncated (steam-atlas lesson: seman
 # --- Stage 08: visualize ---
 MAP_HTML = DATA_DIR / f"living_people_map_{ROSTER_VARIANT}_{EMBED_VARIANT}.html"
 DOCS_DIR = REPO_ROOT / "docs"
-DOCS_HTML = DOCS_DIR / ("index.html" if ROSTER_VARIANT == "enwiki" else f"{ROSTER_VARIANT}.html")
+_docs_base = "index" if ROSTER_VARIANT == "enwiki" else ROSTER_VARIANT
+_docs_suffix = "" if EMBED_VARIANT == "lead" else "_" + EMBED_VARIANT.removeprefix("lead_")
+DOCS_HTML = DOCS_DIR / f"{_docs_base}{_docs_suffix}.html"
 MAP_SUBTITLE = (
     f"The {MAP_N:,} most famous living people, by English Wikipedia attention"
     if ROSTER_VARIANT == "enwiki"
     else f"The {MAP_N:,} most famous living people, by attention across all Wikipedia languages"
 )
+if EMBED_VARIANT != "lead":
+    MAP_SUBTITLE += " · gender-erased embeddings"

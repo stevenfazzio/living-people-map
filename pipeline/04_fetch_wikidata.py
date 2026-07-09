@@ -106,7 +106,7 @@ def fetch_labels(value_qids: list[str]) -> dict[str, str]:
 
 
 def main() -> None:
-    people = pd.read_parquet(config.TOP_PARQUET, columns=["pageid", "qid"]).head(config.MAP_N)
+    people = pd.read_parquet(config.map_roster_parquet(), columns=["pageid", "qid"]).head(config.MAP_N)
     n_missing_qid = int(people["qid"].isna().sum())
     if n_missing_qid:
         print(f"{n_missing_qid} people have no QID; facets will be null for them")
