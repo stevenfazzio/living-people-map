@@ -81,9 +81,13 @@ def save_npz_atomic(path: Path, **arrays) -> None:
 
 
 def title_key(title: str) -> str:
-    """Universal join key across Wikimedia sources (API titles use spaces,
-    dump titles use underscores and include case-variant redirects):
-    underscores to spaces, collapse whitespace, lowercase."""
+    """Lowercased normalization (underscores to spaces, collapse whitespace).
+
+    NO LONGER used for the pageview join: distinct pages can differ only by
+    case, so case-folding lets a person absorb an unrelated page's views
+    (rapper "TeQuila" absorbed "Tequila" the drink). Stage 02 joins exact
+    canonical titles after stage-01b redirect resolution instead. Kept for
+    fuzzy/diagnostic use only."""
     return " ".join(title.replace("_", " ").split()).lower()
 
 

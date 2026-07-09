@@ -34,6 +34,21 @@ npz for vectors, atomic writes, `data/` gitignored and expensive).
   parquet (~8M titles) and delete the bz2.
 - **2026-07-08 — N is TBD**: pull top 100k, choose N from the rank/views
   distribution + spot-checking names at candidate cutoffs.
+- **2026-07-09 — global (all-language) roster variant**: QRank would have
+  been the easy multilingual fame metric but is abandoned (file frozen
+  2024-03-16 despite the site claiming updates), so stages 01d/01e/02b build
+  it from the same 12 monthly dumps: wb_items_per_site sitelinks map every
+  roster QID to its title in all 346 language editions, and per-(person,
+  language, month) views feed the same median metric. `ROSTER_VARIANT` in
+  config switches stages 03+ between rosters; artifacts are suffixed, maps
+  publish to docs/index.html (enwiki) and docs/global.html. Non-English
+  redirect/rename views are NOT resolved (enwiki's are) — documented
+  undercount. Top-25k overlap between the two rosters: 76.5%.
+- **2026-07-09 — no case-folding in the pageview join**: the global metric
+  disagreeing with the enwiki metric exposed that title_key's lowercasing
+  let people absorb unrelated same-name-different-case pages (TeQuila ←
+  "Tequila" the drink). Only 5 of the enwiki top-25k were fake; fixed by
+  joining exact canonical titles.
 - **2026-07-09 — full redirect resolution (stage 01b)**: the naive title join
   zeroed out Vijay (Tamil megastar) because his article was renamed
   "Vijay (actor)" → "C. Joseph Vijay" mid-window, splitting his view history
@@ -44,9 +59,12 @@ npz for vectors, atomic writes, `data/` gitignored and expensive).
 
 ## Wikipedia data gotchas (mostly inherited from jeopardy-wikipedia-map)
 
-- **`title_key`** (underscores→spaces, collapse whitespace, lowercase) is the
-  only safe join key across the action API, pageview dumps, and anything else
-  Wikimedia. Dump titles are underscored; API titles use spaces.
+- **Join on EXACT canonical titles** (underscores→spaces only) after
+  redirect resolution. Never case-fold: distinct pages can differ only by
+  case, and lowercasing let rapper "TeQuila" absorb "Tequila" the drink's
+  views (inflating him to enwiki rank ~7k; caught 2026-07-09 when the global
+  metric disagreed). Case-variant redirects are real rows in the redirect
+  table, so the redirect map already covers them.
 - The pageview dump's **page_id column is unreliable** — never join on it.
 - Dump titles containing double quotes are **CSV-style quoted with backslash
   escapes** (`util.parse_dump_title`). Affects real people ("Weird Al" Yankovic).

@@ -23,7 +23,7 @@ import pandas as pd
 import config
 from util import save_npz_atomic
 
-PROGRESS_NPZ = config.DATA_DIR / f".embed_{config.EMBED_VARIANT}_progress.npz"
+PROGRESS_NPZ = config.DATA_DIR / f".embed_{config.ROSTER_VARIANT}_{config.EMBED_VARIANT}_progress.npz"
 CHECKPOINT_EVERY = 20  # batches
 
 

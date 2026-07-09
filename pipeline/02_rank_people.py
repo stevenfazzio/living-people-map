@@ -4,10 +4,12 @@ Every dump title is first resolved through the redirect map (stage 01b):
 views recorded under a redirect -- alias titles like "The Rock", and OLD
 titles of renamed articles -- are credited to the canonical target. Without
 this, a mid-window rename zeroes a person out entirely (the "Vijay (actor)"
--> "C. Joseph Vijay" incident). After resolution, the join key is
-util.title_key (underscores->spaces, collapse whitespace, lowercase), since
-the roster (API titles with spaces) and the dumps (underscored) disagree on
-representation.
+-> "C. Joseph Vijay" incident). After resolution, titles are joined EXACTLY
+(underscores->spaces only, case preserved). Do NOT lowercase: distinct pages
+can differ only by case, and case-folding lets a person absorb an unrelated
+page's views (rapper "TeQuila" absorbed "Tequila" the drink -- found
+2026-07-09 via the global-metric comparison). Case-variant redirects are
+already handled explicitly by the redirect map.
 
 Metrics per person (a month with no row in the dump = 0 views):
   median_views    -- median of the monthly totals; THE ranking metric
@@ -29,7 +31,7 @@ import pyarrow.compute as pc
 import pyarrow.parquet as pq
 
 import config
-from util import title_key, write_parquet_atomic
+from util import write_parquet_atomic
 
 
 def month_col(month: str) -> str:
@@ -45,20 +47,16 @@ def load_roster(redirect_sources: set[str]) -> pd.DataFrame:
     if stale.any():
         print(f"Dropping {int(stale.sum()):,} roster rows that are redirect pages, not articles.")
         roster = roster[~stale].reset_index(drop=True)
-    roster["title_key"] = roster["title"].map(title_key)
-    collisions = roster["title_key"].duplicated(keep=False)
-    if collisions.any():
-        n = int(collisions.sum())
-        print(f"WARNING: {n} roster rows share a title_key with another row; views will double-count for these.")
-        print(roster.loc[collisions, "title"].head(20).to_list())
+    # Exact canonical titles are the join key (spaces form). Canonical titles
+    # are unique, so any duplicate here indicates upstream corruption.
+    assert not roster["title"].duplicated().any(), "duplicate canonical titles in roster"
     return roster
 
 
 def main() -> None:
-    # Dump-side work runs in pyarrow (C speed; a python title_key .map over
-    # 30-57M titles/month would take hours). Normalization skips title_key's
-    # whitespace collapse -- API titles never have doubled spaces, and a dump
-    # title with doubled underscores simply won't match (negligible).
+    # Dump-side work runs in pyarrow (C speed; a python .map over 30-57M
+    # titles/month would take hours). Titles match EXACTLY after underscores
+    # -> spaces; no case folding (see docstring -- the TeQuila incident).
     redirects = pd.read_parquet(config.REDIRECTS_PARQUET)
 
     roster = load_roster(set(redirects["source_title"]))
@@ -70,27 +68,25 @@ def main() -> None:
         print(f"WARNING: ranking on {len(months_available)}/12 months; missing {sorted(missing)}")
 
     redirect_src = pa.array(redirects["source_title"])
-    redirect_tgt_keys = pc.utf8_lower(
-        pc.replace_substring(pa.array(redirects["target_title"]), pattern="_", replacement=" ")
-    )
+    redirect_tgt_keys = pc.replace_substring(pa.array(redirects["target_title"]), pattern="_", replacement=" ")
     print(f"Redirect map: {len(redirects):,} entries")
 
-    roster_keys = pa.array(roster["title_key"].unique())
+    roster_keys = pa.array(roster["title"].unique())
     for month in months_available:
         table = pq.read_table(config.pageview_month_parquet(month), columns=["title", "views"])
         titles = table["title"].combine_chunks()
-        keys_direct = pc.utf8_lower(pc.replace_substring(titles, pattern="_", replacement=" "))
+        keys_direct = pc.replace_substring(titles, pattern="_", replacement=" ")
         redirect_idx = pc.index_in(titles, value_set=redirect_src)
         keys = pc.if_else(pc.is_valid(redirect_idx), pc.take(redirect_tgt_keys, redirect_idx), keys_direct)
         mask = pc.is_in(keys, value_set=roster_keys)
         matched = pd.DataFrame(
             {
-                "title_key": keys.filter(mask).to_pandas(),
+                "title": keys.filter(mask).to_pandas(),
                 "views": table["views"].combine_chunks().filter(mask).to_pandas(),
             }
         )
-        per_key = matched.groupby("title_key")["views"].sum()
-        roster[month_col(month)] = roster["title_key"].map(per_key).fillna(0).astype("int64")
+        per_title = matched.groupby("title")["views"].sum()
+        roster[month_col(month)] = roster["title"].map(per_title).fillna(0).astype("int64")
         print(f"{month}: matched {(roster[month_col(month)] > 0).sum():,} people", flush=True)
 
     matrix = roster[[month_col(m) for m in months_available]].to_numpy()

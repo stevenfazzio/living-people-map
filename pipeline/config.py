@@ -68,11 +68,40 @@ TOP_K = 100_000
 RANKED_PARQUET = DATA_DIR / "people_ranked.parquet"  # full roster + fame metrics
 TOP_PARQUET = DATA_DIR / f"people_top{TOP_K // 1000}k.parquet"  # TOP_K slice for downstream stages
 
+# --- Stage 01d: Wikidata sitelinks (QID -> per-language titles) ---
+WB_ITEMS_PER_SITE_URL = "https://dumps.wikimedia.org/wikidatawiki/latest/wikidatawiki-latest-wb_items_per_site.sql.gz"
+SITELINKS_PARQUET = DATA_DIR / "sitelinks.parquet"  # roster people only, Wikipedia sites only
+
+# --- Stage 01e: global (all-language) pageviews for roster people ---
+GLOBAL_PAGEVIEWS_DIR = DATA_DIR / "pageviews_global"
+
+
+def global_month_parquet(month: str) -> Path:
+    return GLOBAL_PAGEVIEWS_DIR / f"global_{month.replace('-', '')}.parquet"
+
+
 # --- Stages 03+: the map subset ---
 MAP_N = 25_000  # chosen 2026-07-09 from the choose-N analysis (data/analysis/choose_n.html)
 
+# --- Stage 02b: global ranking ---
+GLOBAL_RANKED_PARQUET = DATA_DIR / "people_ranked_global.parquet"
+GLOBAL_TOP_PARQUET = DATA_DIR / f"people_top{MAP_N // 1000}k_global.parquet"
+
+# Which fame metric selects (and ranks) the MAP_N people downstream:
+#   "enwiki" -- median monthly English Wikipedia views (stage 02)
+#   "global" -- median monthly views across ALL Wikipedias (stage 02b)
+# Stage 03+ artifacts are suffixed with this, so both maps coexist.
+ROSTER_VARIANT = "enwiki"
+
+
+def map_roster_parquet() -> Path:
+    return TOP_PARQUET if ROSTER_VARIANT == "enwiki" else GLOBAL_TOP_PARQUET
+
+
 # --- Stage 03: leads, descriptions, thumbnails ---
-TEXTS_PARQUET = DATA_DIR / "people_texts.parquet"
+# JSONL checkpoints are shared across roster variants (keyed by pageid), so a
+# second variant only fetches people it hasn't seen; the parquets are per-variant.
+TEXTS_PARQUET = DATA_DIR / f"people_texts_{ROSTER_VARIANT}.parquet"
 EXTRACTS_JSONL = DATA_DIR / ".texts_extracts.jsonl"  # resumable checkpoints
 PROPS_JSONL = DATA_DIR / ".texts_props.jsonl"
 EXTRACTS_BATCH = 20  # exlimit max for exintro requests
@@ -82,7 +111,7 @@ TEXT_SLEEP_S = 0.1
 
 # --- Stage 04: Wikidata facets ---
 WIKIDATA_API_URL = "https://www.wikidata.org/w/api.php"
-WIKIDATA_PARQUET = DATA_DIR / "people_wikidata.parquet"
+WIKIDATA_PARQUET = DATA_DIR / f"people_wikidata_{ROSTER_VARIANT}.parquet"
 WIKIDATA_JSONL = DATA_DIR / ".wikidata_claims.jsonl"
 WB_BATCH = 50  # wbgetentities non-bot max
 
@@ -94,15 +123,15 @@ EMBED_BATCH = 96
 
 
 def embeddings_npz(variant: str = EMBED_VARIANT):
-    return DATA_DIR / f"embeddings_{variant}.npz"
+    return DATA_DIR / f"embeddings_{ROSTER_VARIANT}_{variant}.npz"
 
 
 def umap_coords_npz(variant: str = EMBED_VARIANT):
-    return DATA_DIR / f"umap_coords_{variant}.npz"
+    return DATA_DIR / f"umap_coords_{ROSTER_VARIANT}_{variant}.npz"
 
 
 def labels_parquet(variant: str = EMBED_VARIANT):
-    return DATA_DIR / f"labels_{variant}.parquet"
+    return DATA_DIR / f"labels_{ROSTER_VARIANT}_{variant}.parquet"
 
 
 # --- Stage 06: UMAP (params deliberately match the sibling projects) ---
@@ -114,5 +143,11 @@ NAMER_CONCURRENCY = 24
 TOPONYMY_TEXT_CHARS = 2000  # title + lead, truncated (steam-atlas lesson: semantic text, not summaries)
 
 # --- Stage 08: visualize ---
-MAP_HTML = DATA_DIR / f"living_people_map_{EMBED_VARIANT}.html"
+MAP_HTML = DATA_DIR / f"living_people_map_{ROSTER_VARIANT}_{EMBED_VARIANT}.html"
 DOCS_DIR = REPO_ROOT / "docs"
+DOCS_HTML = DOCS_DIR / ("index.html" if ROSTER_VARIANT == "enwiki" else f"{ROSTER_VARIANT}.html")
+MAP_SUBTITLE = (
+    f"The {MAP_N:,} most famous living people, by English Wikipedia attention"
+    if ROSTER_VARIANT == "enwiki"
+    else f"The {MAP_N:,} most famous living people, by attention across all Wikipedia languages"
+)

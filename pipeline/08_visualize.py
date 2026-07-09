@@ -201,6 +201,24 @@ def main() -> None:
         }
     )
 
+    # Global-roster extras (stage 02b columns, carried through stage 03).
+    if "top_lang" in df.columns:
+        values, meta = categorical_colormap(
+            "top_lang", "Dominant Attention Language", top_n_or_other(df["top_lang"].fillna("Unknown"), 12)
+        )
+        all_rawdata.append(values)
+        all_metadata.append(meta)
+    if "english_share" in df.columns:
+        all_rawdata.append(df["english_share"].fillna(1.0).to_numpy(dtype=float))
+        all_metadata.append(
+            {
+                "field": "english_share",
+                "description": "Share of Views from English Wikipedia",
+                "kind": "continuous",
+                "cmap": "cividis",
+            }
+        )
+
     fig = datamapplot.create_interactive_plot(
         coords,
         *topic_name_vectors,
@@ -212,7 +230,7 @@ def main() -> None:
         colormap_rawdata=all_rawdata,
         colormap_metadata=all_metadata,
         title="Living People Map",
-        sub_title=f"The {config.MAP_N:,} most famous living people, by English Wikipedia attention",
+        sub_title=config.MAP_SUBTITLE,
         enable_search=True,
         custom_css=CUSTOM_CSS,
         font_family="Archivo",
@@ -241,8 +259,8 @@ def main() -> None:
     print(f"Patched characterSet ({len(chars)} glyphs) + font preload")
 
     config.DOCS_DIR.mkdir(exist_ok=True)
-    (config.DOCS_DIR / "index.html").write_text(html)
-    print(f"Copied to {config.DOCS_DIR / 'index.html'}")
+    config.DOCS_HTML.write_text(html)
+    print(f"Copied to {config.DOCS_HTML}")
 
 
 if __name__ == "__main__":

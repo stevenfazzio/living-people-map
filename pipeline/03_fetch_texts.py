@@ -72,9 +72,11 @@ def fetch_batched(people: pd.DataFrame, jsonl_path: Path, batch_size: int, extra
 
 
 def main() -> None:
-    people = pd.read_parquet(config.TOP_PARQUET).head(config.MAP_N)
-    people = people[["pageid", "title", "qid", "rank", "median_views", "total_views", "max_views"]]
-    print(f"Fetching texts for top {len(people):,} people")
+    people = pd.read_parquet(config.map_roster_parquet()).head(config.MAP_N)
+    base_cols = ["pageid", "title", "qid", "rank", "median_views", "total_views", "max_views"]
+    extra_cols = [c for c in ("enwiki_rank", "top_lang", "english_share") if c in people.columns]
+    people = people[base_cols + extra_cols]
+    print(f"Fetching texts for top {len(people):,} people ({config.ROSTER_VARIANT} roster)")
 
     extracts = fetch_batched(
         people,
