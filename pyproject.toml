@@ -1,0 +1,41 @@
+[project]
+name = "living-people-map"
+version = "0.1.0"
+description = "A semantic map of the most famous living people, built from English Wikipedia"
+requires-python = ">=3.11"
+dependencies = [
+    "pandas>=2.0",
+    "pyarrow>=15",
+    "requests>=2.31",
+    "python-dotenv>=1.0",
+    "cohere>=7.0.5",
+    "umap-learn>=0.5.10",
+    "datamapplot>=0.5",
+    "toponymy>=0.5,<0.6",
+    "evoc>=0.1.3",
+    "fast-hdbscan==0.2.2",
+    "glasbey>=0.3.0",
+    "nest-asyncio>=1.6.0",
+    "transformers>=4.40",
+    "anthropic>=0.116.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "ruff>=0.4",
+    "pytest>=8",
+    "plotly>=6.8.0",
+]
+
+[tool.ruff]
+line-length = 120
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "I"]
+
+[tool.ruff.lint.isort]
+known-first-party = ["config", "util"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
