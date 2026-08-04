@@ -81,6 +81,21 @@ npz for vectors, atomic writes, `data/` gitignored and expensive).
   the simpler method to explain to a visitor. Change `SITE_LANDING` — not the
   filenames — to re-point the landing page, or stage 08 will recreate the old
   layout on the next render.
+- **2026-08-04 — datamapplot pinned to a git rev, not PyPI**: PyPI's latest is
+  0.7.3 (2026-05-31) and two merges we need postdate it with no release since,
+  so `[tool.uv.sources]` pins main's HEAD `5cf47aa5`. That SHA *is* the #206
+  merge commit, so nothing unreviewed rides along. #206 (tap-to-inspect) is
+  the one that matters: stage 08 sets `on_click`, so before it a phone tap
+  jumped straight to Wikipedia and the hover card was unreachable on touch —
+  a real defect for a site mostly opened on phones. #197 gives
+  `MAP_SCROLL_ZOOM_SPEED` (0.05; the 0.01 default is sluggish over 25k
+  points). **Gotcha: main still self-reports `version = "0.7.3"`, so
+  `datamapplot.__version__` cannot tell you whether you're on the release or
+  the pin — trust the rev in `pyproject.toml`.** Second gotcha:
+  `render_html` is wrapped by the config decorator, which does not set
+  `__wrapped__`, so `inspect.signature` shows `*args, **kwargs` and makes new
+  params look MISSING — grep the installed source instead. Drop the pin when
+  0.7.4 ships.
 - **2026-08-04 — Pages URL is stevenfazzio.com, NOT github.io**: the account
   has a user-level custom domain, so project sites serve from
   `https://stevenfazzio.com/<repo>/` (same as steam-atlas, jeopardy-map,
