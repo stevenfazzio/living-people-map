@@ -81,6 +81,22 @@ npz for vectors, atomic writes, `data/` gitignored and expensive).
   the simpler method to explain to a visitor. Change `SITE_LANDING` — not the
   filenames — to re-point the landing page, or stage 08 will recreate the old
   layout on the next render.
+- **2026-08-04 — Wikidata birth years need a plausibility filter**: the Birth
+  Year colormap rendered as one flat shade of yellow because *three* of 25k
+  P569 values were upstream junk — Omar Metwally `+0001` (placeholder),
+  Rodtang Jitmuangnon `1001` (typo for 1997), Lizzie Velásquez `1743` (typo
+  for 1989, day/month correct). Our parser was right; Wikidata is wrong. Three
+  bad rows stretched the ramp over [1, 2021], leaving the real 1909–2021 span
+  in the top 5% of the colormap. Stage 04 now nulls anything outside
+  `BIRTH_YEAR_MIN/MAX`. **Put the filter where the parquet row is built, not in
+  `birth_year()`: the JSONL checkpoint stores the already-parsed year, so a
+  parser-only fix silently skips every cached person** (i.e. all 25k). Null,
+  never clamp — clamping 1001→1900 would render a 1997-born fighter as the
+  oldest person on the map. Stage 08 additionally pins `vmin`/`vmax` to the
+  1st–99th percentile rounded to a decade (1930–2010); out-of-range values
+  saturate at the end colors and the hover card still shows the true year.
+  Unknown years pass through as NaN, which datamapplot draws transparent —
+  better than the old median-fill, which painted 215 unknowns as born 1976.
 - **2026-08-04 — only two maps are published; history purged**: rendered maps
   are ~8 MB each and four of them were adding ~34 MB of blobs per re-render
   (82 MB across history by the second one). `docs/` now tracks only

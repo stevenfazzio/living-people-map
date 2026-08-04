@@ -182,8 +182,26 @@ def main() -> None:
     all_rawdata.append(values)
     all_metadata.append(meta)
 
-    all_rawdata.append(born.fillna(born.median()).to_numpy(dtype=float))
-    all_metadata.append({"field": "birth_year", "description": "Birth Year", "kind": "continuous", "cmap": "plasma"})
+    # Scale the ramp to the 1st-99th percentile, rounded out to a decade for a
+    # legible legend, rather than to min/max: a handful of centenarians and
+    # newborn royals would otherwise spend most of the colormap on ~1% of the
+    # points. Values beyond the bounds saturate at the end colors (matplotlib's
+    # under/over default), and the hover card still shows the exact year.
+    # Unknown years stay NaN -> datamapplot renders them transparent; filling
+    # them with the median would paint 212 people as if we knew they were 1976.
+    born_lo = float(np.floor(born.quantile(0.01) / 10) * 10)
+    born_hi = float(np.ceil(born.quantile(0.99) / 10) * 10)
+    all_rawdata.append(born.astype(float).to_numpy())  # Int64 NA -> NaN
+    all_metadata.append(
+        {
+            "field": "birth_year",
+            "description": "Birth Year",
+            "kind": "continuous",
+            "cmap": "plasma",
+            "vmin": born_lo,
+            "vmax": born_hi,
+        }
+    )
 
     all_rawdata.append(log_views.to_numpy())
     all_metadata.append(

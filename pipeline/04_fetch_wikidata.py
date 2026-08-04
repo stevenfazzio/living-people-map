@@ -37,11 +37,25 @@ def item_ids(claims: list[dict]) -> list[str]:
 
 
 def birth_year(claims: list[dict]) -> int | None:
+    """Raw P569 year, exactly as Wikidata states it -- see plausible_birth_year."""
     for c in best_claims(claims):
         value = c.get("mainsnak", {}).get("datavalue", {}).get("value")
         if isinstance(value, dict) and value.get("time", "").startswith("+") and value.get("precision", 0) >= 9:
             return int(value["time"][1:5])
     return None
+
+
+def plausible_birth_year(year) -> int | None:
+    """Drop birth years impossible for a living person (config.BIRTH_YEAR_MIN/MAX).
+
+    Applied here rather than in birth_year() on purpose: the JSONL checkpoint
+    stores the already-parsed year, so a fix inside the parser would only reach
+    people fetched after it. Filtering where the parquet row is built covers
+    cached records too, and keeps the checkpoint a faithful copy of upstream.
+    """
+    if year is None or not (config.BIRTH_YEAR_MIN <= year <= config.BIRTH_YEAR_MAX):
+        return None
+    return year
 
 
 def fetch_entities(session, qids: list[str], props: str) -> dict[str, dict]:
@@ -122,7 +136,7 @@ def main() -> None:
             return pd.Series({"birth_year": None, "gender": None, "citizenships": [], "occupations": []})
         return pd.Series(
             {
-                "birth_year": rec["birth_year"],
+                "birth_year": plausible_birth_year(rec["birth_year"]),
                 "gender": labels.get(rec["gender_qids"][0]) if rec["gender_qids"] else None,
                 "citizenships": [labels.get(q, q) for q in rec["citizenship_qids"]],
                 "occupations": [labels.get(q, q) for q in rec["occupation_qids"]],
@@ -131,6 +145,15 @@ def main() -> None:
 
     people = pd.concat([people, people["qid"].apply(build_row)], axis=1)
     people["birth_year"] = people["birth_year"].astype("Int64")
+    # Count on this roster's rows, not claims.values() -- the JSONL checkpoint is
+    # shared across roster variants, so it holds people this map doesn't include.
+    raw_year = people["qid"].map(lambda q: (claims.get(q) or {}).get("birth_year"))
+    n_implausible = int((raw_year.notna() & people["birth_year"].isna()).sum())
+    if n_implausible:
+        print(
+            f"birth_year: dropped {n_implausible} outside "
+            f"[{config.BIRTH_YEAR_MIN}, {config.BIRTH_YEAR_MAX}] (bad upstream Wikidata)"
+        )
     print(f"birth_year coverage: {people['birth_year'].notna().mean():.1%}")
     print(f"gender coverage: {people['gender'].notna().mean():.1%}")
     print(f"occupation coverage: {(people['occupations'].str.len() > 0).mean():.1%}")

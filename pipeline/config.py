@@ -5,6 +5,7 @@ movie-madness-map / steam-atlas / jeopardy-wikipedia-map). For smoke tests,
 temporarily set MAX_ROSTER_REQUESTS or trim PAGEVIEW_MONTHS; don't add flags.
 """
 
+import datetime
 from pathlib import Path
 
 from dotenv import load_dotenv
@@ -114,6 +115,15 @@ WIKIDATA_API_URL = "https://www.wikidata.org/w/api.php"
 WIKIDATA_PARQUET = DATA_DIR / f"people_wikidata_{ROSTER_VARIANT}.parquet"
 WIKIDATA_JSONL = DATA_DIR / ".wikidata_claims.jsonl"
 WB_BATCH = 50  # wbgetentities non-bot max
+# Wikidata P569 carries upstream junk: placeholder year 1 (Omar Metwally), and
+# plain typos (Rodtang Jitmuangnon 1001 for 1997, Lizzie Velasquez 1743 for
+# 1989). Only 3 of 25k, but they stretched the Birth Year colormap across two
+# millennia and flattened everyone real into one shade. Out-of-window values
+# become NULL, not clamped -- they are wrong, not extreme-but-real, so
+# clamping 1001 to 1900 would falsely render a 1997-born fighter as the oldest
+# person on the map. Oldest verified living person was born 1909.
+BIRTH_YEAR_MIN = 1900
+BIRTH_YEAR_MAX = datetime.date.today().year
 
 # --- Stage 05: embeddings ---
 # "lead" is the base Cohere embedding; "lead_nogender_centroid" and
