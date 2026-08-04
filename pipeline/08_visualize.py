@@ -227,6 +227,8 @@ def main() -> None:
         marker_size_array=marker_sizes,
         extra_point_data=extra_data,
         on_click="window.open(`{wiki_url}`, '_blank')",
+        on_click_label=config.MAP_ON_CLICK_LABEL,
+        scroll_zoom_speed=config.MAP_SCROLL_ZOOM_SPEED,
         colormap_rawdata=all_rawdata,
         colormap_metadata=all_metadata,
         title="Living People Map",

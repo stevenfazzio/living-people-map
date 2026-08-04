@@ -160,5 +160,8 @@ MAP_SUBTITLE = (
     if ROSTER_VARIANT == "enwiki"
     else f"The {MAP_N:,} most famous living people, by attention across all Wikipedia languages"
 )
+# Both need the pinned datamapplot rev (see pyproject.toml) -- neither is in 0.7.3.
+MAP_SCROLL_ZOOM_SPEED = 0.05  # datamapplot default 0.01 is sluggish across 25k points
+MAP_ON_CLICK_LABEL = "Read on Wikipedia"  # tap-card action button; default "Open" says nothing
 if EMBED_VARIANT != "lead":
     MAP_SUBTITLE += " · gender-erased embeddings"

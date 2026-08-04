@@ -28,6 +28,21 @@ dev = [
     "plotly>=6.8.0",
 ]
 
+# datamapplot is pinned past PyPI's 0.7.3 (2026-05-31) for two post-release
+# merges we depend on:
+#   #206 tap-to-inspect -- stage 08 sets on_click, so before this a phone tap
+#        jumped straight to Wikipedia and the hover card was unreachable.
+#   #197 scroll_zoom_speed -- MAP_SCROLL_ZOOM_SPEED in config.
+# The rev is main's HEAD as of 2026-08-04, which IS the #206 merge commit, so
+# it carries those two plus #198 (font-fetch SSRF fix), #199 (empty-label
+# normalization -- a no-op here; our unlabelled rows are the literal
+# "Unlabelled"), and #204 (density overview during selections). NOTE: main
+# still self-reports version "0.7.3", so the installed build is
+# indistinguishable from the release by version string -- trust this rev, not
+# datamapplot.__version__. Drop back to PyPI once 0.7.4 ships with these.
+[tool.uv.sources]
+datamapplot = { git = "https://github.com/TutteInstitute/datamapplot", rev = "5cf47aa5ecc2023dde89226fff93f67513341cf5" }
+
 [tool.ruff]
 line-length = 120
 target-version = "py311"
