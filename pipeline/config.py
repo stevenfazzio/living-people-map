@@ -148,9 +148,13 @@ TOPONYMY_TEXT_CHARS = 2000  # title + lead, truncated (steam-atlas lesson: seman
 # --- Stage 08: visualize ---
 MAP_HTML = DATA_DIR / f"living_people_map_{ROSTER_VARIANT}_{EMBED_VARIANT}.html"
 DOCS_DIR = REPO_ROOT / "docs"
-_docs_base = "index" if ROSTER_VARIANT == "enwiki" else ROSTER_VARIANT
+# docs/ is published as-is by GitHub Pages, so one variant has to own index.html.
+# The published site leads with the gender-erased centroid map (2026-08-04); every
+# other variant keeps its descriptive filename.
+SITE_LANDING = ("global", "lead_nogender_centroid")
 _docs_suffix = "" if EMBED_VARIANT == "lead" else "_" + EMBED_VARIANT.removeprefix("lead_")
-DOCS_HTML = DOCS_DIR / f"{_docs_base}{_docs_suffix}.html"
+_docs_name = "index" if (ROSTER_VARIANT, EMBED_VARIANT) == SITE_LANDING else f"{ROSTER_VARIANT}{_docs_suffix}"
+DOCS_HTML = DOCS_DIR / f"{_docs_name}.html"
 MAP_SUBTITLE = (
     f"The {MAP_N:,} most famous living people, by English Wikipedia attention"
     if ROSTER_VARIANT == "enwiki"
