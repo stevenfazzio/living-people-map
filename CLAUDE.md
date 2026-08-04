@@ -91,6 +91,12 @@ npz for vectors, atomic writes, `data/` gitignored and expensive).
   and purged from history with git-filter-repo + force-push — safe only
   because the repo was hours old with 0 clones/forks. **That window is closed
   now: never rewrite this history again, untrack going forward instead.**
+  .git went 70 MB → 26 MB. Note the purge is *path*-based, so it is not total:
+  in c8892a5 and 73ce556 the enwiki map lived at `docs/index.html` (the rename
+  to `enwiki.html` came later), and ~16 MB of it still sits there under that
+  old path. Stripping it would need a blob-id filter and would leave the
+  initial commit's "+ first rendered map" message pointing at nothing, so it
+  was left alone deliberately.
   `.gitignore` allowlists `docs/index.html` + `docs/global.html` against
   `docs/*.html`, so rendering another variant can't accidentally be committed.
   Nothing was lost — `data/living_people_map_*.html` holds every variant and
