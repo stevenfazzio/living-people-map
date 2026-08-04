@@ -5,7 +5,7 @@ proxy: median monthly pageviews over a trailing 12-month window (2025-07 ..
 2026-06). Sibling project of movie-madness-map, steam-atlas, and
 jeopardy-wikipedia-map.
 
-**Live: <https://stevenfazzio.github.io/living-people-map/>**
+**Live: <https://stevenfazzio.com/living-people-map/>**
 
 ## The maps
 
@@ -15,10 +15,10 @@ region names → DataMapPlot.
 
 | Map | Roster | Embeddings |
 |---|---|---|
-| [(landing page)](https://stevenfazzio.github.io/living-people-map/) | Global | **gender-erased** (centroid) |
-| [global_nogender_leace](https://stevenfazzio.github.io/living-people-map/global_nogender_leace.html) | Global | **gender-erased** (LEACE) |
-| [global](https://stevenfazzio.github.io/living-people-map/global.html) | Global | unmodified |
-| [enwiki](https://stevenfazzio.github.io/living-people-map/enwiki.html) | English Wikipedia | unmodified |
+| [(landing page)](https://stevenfazzio.com/living-people-map/) | Global | **gender-erased** (centroid) |
+| [global_nogender_leace](https://stevenfazzio.com/living-people-map/global_nogender_leace.html) | Global | **gender-erased** (LEACE) |
+| [global](https://stevenfazzio.com/living-people-map/global.html) | Global | unmodified |
+| [enwiki](https://stevenfazzio.com/living-people-map/enwiki.html) | English Wikipedia | unmodified |
 
 The **global** roster ranks people by attention across all 346 Wikipedia
 language editions; the **enwiki** roster ranks by English Wikipedia views
