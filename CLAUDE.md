@@ -72,6 +72,20 @@ npz for vectors, atomic writes, `data/` gitignored and expensive).
   SQL dumps (~11M ns0 redirects); stage 02 resolves every dump title through
   it before keying. This also fixes the nickname-redirect undercount
   ("The Rock" etc.), which is no longer an accepted limitation.
+- **2026-08-04 — published public; the erased map leads**: repo is public at
+  github.com/stevenfazzio/living-people-map, Pages serves `docs/` from main.
+  `docs/` is published as-is, so one variant has to own `index.html`:
+  `config.SITE_LANDING` = (global, lead_nogender_centroid) claims it and the
+  enwiki base map moved to `docs/enwiki.html`. Centroid over LEACE because
+  the two are near-identical here (rank-1 concept) and difference-of-means is
+  the simpler method to explain to a visitor. Change `SITE_LANDING` — not the
+  filenames — to re-point the landing page, or stage 08 will recreate the old
+  layout on the next render.
+- **2026-08-04 — Pages URL is stevenfazzio.com, NOT github.io**: the account
+  has a user-level custom domain, so project sites serve from
+  `https://stevenfazzio.com/<repo>/` (same as steam-atlas, jeopardy-map,
+  movie-madness-map). `gh api repos/:owner/:repo/pages --jq .html_url` is the
+  authority; don't assume the github.io form when writing README links.
 
 ## Wikipedia data gotchas (mostly inherited from jeopardy-wikipedia-map)
 
