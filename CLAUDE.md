@@ -81,6 +81,20 @@ npz for vectors, atomic writes, `data/` gitignored and expensive).
   the simpler method to explain to a visitor. Change `SITE_LANDING` — not the
   filenames — to re-point the landing page, or stage 08 will recreate the old
   layout on the next render.
+- **2026-08-04 — only two maps are published; history purged**: rendered maps
+  are ~8 MB each and four of them were adding ~34 MB of blobs per re-render
+  (82 MB across history by the second one). `docs/` now tracks only
+  `index.html` (centroid-erased) and `global.html` — kept deliberately as the
+  *control*, since the erasure claim is unverifiable by eye without the
+  un-erased map beside it. `enwiki.html` and `global_nogender_leace.html` were
+  dropped (LEACE lands within noise of centroid; enwiki is a roster side-note)
+  and purged from history with git-filter-repo + force-push — safe only
+  because the repo was hours old with 0 clones/forks. **That window is closed
+  now: never rewrite this history again, untrack going forward instead.**
+  `.gitignore` allowlists `docs/index.html` + `docs/global.html` against
+  `docs/*.html`, so rendering another variant can't accidentally be committed.
+  Nothing was lost — `data/living_people_map_*.html` holds every variant and
+  stage 08 re-renders any of them in ~20 s.
 - **2026-08-04 — datamapplot pinned to a git rev, not PyPI**: PyPI's latest is
   0.7.3 (2026-05-31) and two merges we need postdate it with no release since,
   so `[tool.uv.sources]` pins main's HEAD `5cf47aa5`. That SHA *is* the #206

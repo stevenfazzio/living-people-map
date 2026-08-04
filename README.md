@@ -16,13 +16,19 @@ region names → DataMapPlot.
 | Map | Roster | Embeddings |
 |---|---|---|
 | [(landing page)](https://stevenfazzio.com/living-people-map/) | Global | **gender-erased** (centroid) |
-| [global_nogender_leace](https://stevenfazzio.com/living-people-map/global_nogender_leace.html) | Global | **gender-erased** (LEACE) |
-| [global](https://stevenfazzio.com/living-people-map/global.html) | Global | unmodified |
-| [enwiki](https://stevenfazzio.com/living-people-map/enwiki.html) | English Wikipedia | unmodified |
+| [global](https://stevenfazzio.com/living-people-map/global.html) | Global | unmodified — the control |
 
-The **global** roster ranks people by attention across all 346 Wikipedia
-language editions; the **enwiki** roster ranks by English Wikipedia views
-alone (an anglosphere lens). Their top-25k rosters overlap 76.5%.
+Two maps ship, and the pairing is the point: same people, same parameters,
+one with gender projected out of the embeddings. Flip between them to see
+what the erasure did.
+
+The roster ranks people by attention across all 346 Wikipedia language
+editions. An English-Wikipedia-only roster (an anglosphere lens; top-25k
+overlap 76.5%) and a LEACE erasure variant both build from this same pipeline
+but aren't published — the rendered HTML is ~8 MB apiece and LEACE lands
+within noise of the centroid erasure, so committing them cost repo weight for
+no reader benefit. Flip `ROSTER_VARIANT` / `EMBED_VARIANT` in
+`pipeline/config.py` and re-run stage 08 to build either locally.
 
 ## Gender erasure
 
@@ -78,15 +84,17 @@ fetches people the first didn't cover. Stage 08 names its output after the
 variant pair, except that the published landing page — `config.SITE_LANDING`,
 currently global + centroid-erased — owns `docs/index.html`:
 
-| `ROSTER_VARIANT` | `EMBED_VARIANT` | Output |
-|---|---|---|
-| `global` | `lead_nogender_centroid` | `docs/index.html` |
-| `global` | `lead_nogender_leace` | `docs/global_nogender_leace.html` |
-| `global` | `lead` | `docs/global.html` |
-| `enwiki` | `lead` | `docs/enwiki.html` |
+| `ROSTER_VARIANT` | `EMBED_VARIANT` | Output | Committed? |
+|---|---|---|---|
+| `global` | `lead_nogender_centroid` | `docs/index.html` | yes |
+| `global` | `lead` | `docs/global.html` | yes |
+| `global` | `lead_nogender_leace` | `docs/global_nogender_leace.html` | no |
+| `enwiki` | `lead` | `docs/enwiki.html` | no |
 
 `docs/` is served directly by GitHub Pages, so the committed HTML *is* the
-published site.
+published site. `.gitignore` allowlists only the two published maps, so
+rendering another variant leaves your working tree clean rather than staging
+an 8 MB file you didn't mean to publish.
 
 View locally: `python3 -m http.server 8742 --bind 127.0.0.1 -d docs` →
 <http://127.0.0.1:8742/> (never open via `file://`).

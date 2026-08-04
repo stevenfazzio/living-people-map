@@ -1,6 +1,15 @@
 # Data is expensive to regenerate but never committed
 data/
 
+# Rendered maps are ~8 MB each. Only the two that make up the published site
+# are committed: the gender-erased landing page and the unmodified control it
+# is meant to be compared against. Every other variant renders to docs/ too
+# (see the stage-08 table in the README) but stays local -- allowlist rather
+# than blocklist so a new variant can't be committed by accident.
+docs/*.html
+!docs/index.html
+!docs/global.html
+
 # Logs from long-running pipeline stages
 logs/
 
