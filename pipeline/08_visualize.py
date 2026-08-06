@@ -133,13 +133,20 @@ def main() -> None:
     assert len(df) == len(people), "merge changed row count"
     print(f"Rendering {len(df):,} people")
 
-    label_columns = sorted(c for c in df.columns if c.startswith("label_layer_"))
     # The parquet stores label_layer_0 = COARSEST. DataMapPlot wants label
     # layers FINEST-FIRST (create_interactive_plot docstring), and its
     # hierarchical_collision_priority gives later (coarser) layers the win.
     # Passing coarsest-first inverts zoom gating AND collision priority --
     # fine labels crowd out coarse ones at overview zoom.
+    label_columns = sorted(
+        (c for c in df.columns if c.startswith("label_layer_")),
+        key=lambda s: int(s.rsplit("_", 1)[1]),  # numeric: lexicographic sorts _10 before _2
+    )
     topic_name_vectors = [df[c].fillna("Unlabelled").to_numpy() for c in reversed(label_columns)]
+    # Convention-agnostic guard: the finest layer always has more unique names.
+    n_finest = pd.Series(topic_name_vectors[0]).nunique()
+    n_coarsest = pd.Series(topic_name_vectors[-1]).nunique()
+    assert n_finest >= n_coarsest, "label layers must be finest-first for DataMapPlot"
 
     # -- per-point display fields ------------------------------------------
     occupations = df["occupations"].apply(lambda o: o[0].title() if isinstance(o, np.ndarray) and len(o) else "Unknown")

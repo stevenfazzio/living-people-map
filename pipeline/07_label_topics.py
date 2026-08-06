@@ -5,7 +5,9 @@ density regions in the 2D UMAP coords (clusterable_vectors), names them with
 the LLM using the high-dim embeddings + documents, and emits per-person labels
 at multiple zoom levels ("Unlabelled" rows are the unnamed gaps of the map at
 that scale -- keep them). Layer 0 of topic_names_/cluster_layers_ is the
-FINEST; DataMapPlot wants coarsest first, so we reverse when saving.
+FINEST. We reverse when saving so label_layer_0 is the broadest layer: a
+stable column name, since the layer count varies run to run. DataMapPlot
+itself wants FINEST-first -- stage 08 reverses back at the call site.
 
 Documents are title + description + lead (raw source text, not summaries --
 steam-atlas ablation lesson), capped at TOPONYMY_TEXT_CHARS.
