@@ -14,7 +14,9 @@ npz for vectors, atomic writes, `data/` gitignored and expensive).
 - Long runs: background them with output to `logs/` and check the log.
 - Wikimedia etiquette: every request goes through `util.make_session()`
   (descriptive User-Agent with contact info — placeholder UAs get 429'd),
-  `maxlag=5` on action-API calls, modest sleeps between requests.
+  `maxlag=5` on Wikipedia action-API calls but not on Wikidata reads (there it
+  also counts query-service lag, which can refuse every read for long
+  stretches), modest sleeps between requests.
 
 ## Decisions (dated)
 

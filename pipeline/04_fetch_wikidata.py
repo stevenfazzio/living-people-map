@@ -59,21 +59,20 @@ def plausible_birth_year(year) -> int | None:
 
 
 def fetch_entities(session, qids: list[str], props: str) -> dict[str, dict]:
+    # No maxlag: on wikidata.org it also counts query-service (WDQS) update
+    # lag, which can refuse every read for long stretches (it did on
+    # 2026-10-16). It exists to slow editing bots; a read adds no such load.
     params = {
         "action": "wbgetentities",
         "format": "json",
         "ids": "|".join(qids),
         "props": props,
-        "maxlag": "5",
     }
     if props == "labels":
         params["languages"] = "en"
     resp = get_with_retry(session, config.WIKIDATA_API_URL, params=params)
     data = resp.json()
     if "error" in data:
-        if data["error"].get("code") == "maxlag":
-            time.sleep(5)
-            return fetch_entities(session, qids, props)
         raise RuntimeError(f"wbgetentities error: {data['error']}")
     return data.get("entities", {})
 
